@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.trajectorysequence;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment.SequenceSegment;
 
 import java.util.Collections;
 import java.util.List;
+@Disabled
 
 public class TrajectorySequence {
     private final List<SequenceSegment> sequenceList;

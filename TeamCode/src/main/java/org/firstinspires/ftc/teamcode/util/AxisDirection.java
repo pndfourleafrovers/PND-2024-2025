@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.util;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
+
 /**
  * A direction for an axis to be remapped to
  */

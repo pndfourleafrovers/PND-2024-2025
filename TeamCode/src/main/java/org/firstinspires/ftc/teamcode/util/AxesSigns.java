@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.util;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
+
 /**
  * IMU axes signs in the order XYZ (after remapping).
  */

@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.Components.Drivetrain;
+import org.firstinspires.ftc.teamcode.Helper.Drivetrain;
 import org.firstinspires.ftc.teamcode.Components.SharedData;
 
 @Autonomous(name = "Autonomous Drive Sequence", group = "Linear Opmode")

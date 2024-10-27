@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.trajectorysequence.sequencesegment;
 
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import java.util.Collections;
+@Disabled
 
 public final class TrajectorySegment extends SequenceSegment {
     private final Trajectory trajectory;

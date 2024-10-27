@@ -92,13 +92,19 @@ public class BasicMovement extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        telemetry.addData("Arm Position", arm.getCurrentPosition() / TICKS_PER_DEGREE);
+        telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
 
+        //  telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
+        telemetry.update();
         waitForStart();
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.addData("Arm Position", arm.getCurrentPosition() / TICKS_PER_DEGREE);
+            telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
+
             //  telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
             telemetry.update();
             double max;
@@ -162,7 +168,7 @@ public class BasicMovement extends LinearOpMode {
                 Arm.armMovement(holdPosition);
             }
 
-
+/*
             if (gamepad2.a) {
                 Viper.viper.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 double viperMove = -gamepad2.left_stick_y;
@@ -178,43 +184,67 @@ public class BasicMovement extends LinearOpMode {
                 }
                 Viper.viper.setPower(viperPowerV);
             }
-            if (gamepad2.back) {
-                int holdPosition = (int) (Viper.viper.getCurrentPosition() / ticksPerViperInch);
+            if (gamepad2.back) {n() / ticksPerViperInch);
                 telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
                 telemetry.update();
                 Viper.viperMovementSetSpeed(holdPosition, 0.2);
+                int holdPosition = (int) (Viper.viper.getCurrentPositio
             }
-
+*/
             // viper movement
 
             //top basket
             if (gamepad2.a) {
-                Arm.armMovement(93);
-                Viper.viperMovementSetSpeed(24, 0.5);
+                Arm.armMovement(92);
+                Viper.viperMovementSetSpeed(24, 1);
+            }
+
+            if (gamepad2.x) {
+                Viper.viperMovementSetSpeed(0, 1);
+                sleep(2000);
+                Arm.armMovementSetPower(0,1);
+
             }
 
             //rest to 0
             if (gamepad2.b) {
-                Viper.viperMovementSetSpeed(0, 0.5);
+                Viper.viperMovementSetSpeed(0, 1);
+
             }
 
             // inner pos 1
             if (gamepad2.dpad_left) {
-                Viper.viperMovementSetSpeed(6, 0.5);
+                Viper.viperMovementSetSpeed(6, 0.3);
+                Arm.armMovement(-4);
             }
 
             // inner pos 2
                 if (gamepad2.dpad_up) {
-                    Arm.armMovement(7);
-                    Viper.viperMovementSetSpeed(10, 0.5);
+                    Arm.armMovement(4);
+
+                    Viper.viperMovementSetSpeed(10, 0.3);
+                    Arm.armMovementSetPower(2,0.7);
+                 //   Viper.viperMovementSetSpeed(10, 0.5);
                 }
 
             // inner pos 3
             if (gamepad2.dpad_right) {
-                Arm.armMovement(12);
-                Viper.viperMovementSetSpeed(12, 0.5);
+                Arm.armMovement(3);
+                Viper.viperMovementSetSpeed(12, 0.3);
+                Arm.armMovementSetPower(7,0.7);
+              //  Viper.viperMovementSetSpeed(12, 0.5);
             }
 
+            if (gamepad2.dpad_down){
+                Viper.viperMovementSetSpeed(15, 0.5);
+                Arm.armMovementSetPower(9, 1);
+
+            }
+            if (gamepad2.y) {
+                Arm.armMovementSetPower(20, 1);
+                Viper.viperMovementSetSpeed(0, 0.5);
+
+            }
 
                 //backward
                 if (gamepad1.dpad_down) {
@@ -239,13 +269,13 @@ public class BasicMovement extends LinearOpMode {
 
 
                 // level 2 preparing position
-                if (gamepad1.left_bumper) {
+                if (gamepad1.a) {
                     Arm.armMovement(152);
                 }
 
             // ground holding position
-            if (gamepad1.right_bumper) {
-                Arm.armMovement(7);
+            if (gamepad1.left_bumper) {
+                Arm.armMovementSetPower(7,1);
             }
             }
         }

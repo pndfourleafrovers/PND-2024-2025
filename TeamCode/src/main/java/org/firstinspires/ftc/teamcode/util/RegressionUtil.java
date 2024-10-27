@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.util;
 import androidx.annotation.Nullable;
 
 import com.acmerobotics.roadrunner.kinematics.Kinematics;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
@@ -11,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+@Disabled
 
 /**
  * Various regression utilities.

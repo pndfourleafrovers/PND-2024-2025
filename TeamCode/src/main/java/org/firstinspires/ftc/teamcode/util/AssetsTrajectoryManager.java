@@ -7,11 +7,13 @@ import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.config.TrajectoryConfig;
 import com.acmerobotics.roadrunner.trajectory.config.TrajectoryConfigManager;
 import com.acmerobotics.roadrunner.trajectory.config.TrajectoryGroupConfig;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
+@Disabled
 
 /**
  * Set of utilities for loading trajectories from assets (the plugin save location).

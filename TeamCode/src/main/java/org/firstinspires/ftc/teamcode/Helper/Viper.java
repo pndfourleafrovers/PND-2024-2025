@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Viper {
 
-    double ticksPerViperInch = (537.7 / (112/25.4));
+    double ticksPerViperHalfInch = (537.7 / (112/25.4))/2;
     boolean Run = true;
     public DcMotor viper;
     int currentDistance = 0;
@@ -19,18 +19,19 @@ public class Viper {
         viper = hardwareMap.get(DcMotor.class, "viper");
 
     }
-    public double viperMovement(int distance) {
+    public double viperMovement(double distance) {
 
 
         //double currentDistance = viper.getCurrentPosition()/ticksPerViperInch;
         while (Run = true) {
           //  if (limit.getState() == false) {    might have to move to above viper.setTargetPosition
-                int movement = (int) (ticksPerViperInch * (distance - currentDistance));
+                int half_distance = (int)distance*2;
+                int movement = (int) (ticksPerViperHalfInch * (half_distance - currentDistance));
          //   if (limit.getState() == false) {
                 viper.setTargetPosition(-movement);
                 viper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                ViperPowerCalc(distance);
-                distance = currentDistance;
+                ViperPowerCalc(half_distance);
+                half_distance = currentDistance;
                 break;
          //   }
           /*  else if (limit.getState() ==  true) {
@@ -44,22 +45,23 @@ public class Viper {
         }
         return currentDistance;
     }
-    public double viperMovementSetSpeed(int distance, double power) {
+    public double viperMovementSetSpeed(double distance, double power) {
 
         //double currentDistance = viper.getCurrentPosition()/ticksPerViperInch;
         while (Run = true) {
+            int half_distance = (int)distance*2;
 
-            int movement = (int) (ticksPerViperInch * (distance - currentDistance));
+            int movement = (int) (ticksPerViperHalfInch * (half_distance - currentDistance));
             viper.setTargetPosition(-movement);
             viper.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             viper.setPower(power);
-            distance = currentDistance;
+            half_distance = currentDistance;
             break;
         }
         return currentDistance;
     }
     public void ViperPowerCalc(int CalcDistance) {
-        double viperMult = 0.01; // This is a proportionality constant. You may need to tune this value.
+        double viperMult = 0.02; // This is a proportionality constant. You may need to tune this value.
         while (Math.abs(getDistance() - CalcDistance) > 0.5) { // Allow for a small error margin
 
             double error = CalcDistance - getDistance(); // Calculate the error
@@ -74,7 +76,7 @@ public class Viper {
     }
     public double getDistance() {
         double viperPos;
-        viperPos = viper.getCurrentPosition()/ticksPerViperInch;
+        viperPos = viper.getCurrentPosition()/ticksPerViperHalfInch;
         return viperPos;
     }
 }

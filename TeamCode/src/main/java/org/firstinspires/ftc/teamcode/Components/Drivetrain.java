@@ -1,42 +1,17 @@
 package org.firstinspires.ftc.teamcode.Components;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Autonomous.AllQuads2;
 
-public class Drivetrain {
-    private DcMotor leftFrontDrive, rightFrontDrive, leftBackDrive, rightBackDrive;
-    private DcMotorEx leftEncoder, rightEncoder, horizontalEncoder;
-    private IMU imu;
-    private final Telemetry telemetry;
-    private SharedData sharedData;
-
-    // Odometry constants
-    private static final double WHEEL_DIAMETER_INCHES = 38.0 / 25.4; // 38mm to inches
-    private static final double TICKS_PER_REV = 1000.0;
-    private static final double INCHES_PER_TICK = (Math.PI * WHEEL_DIAMETER_INCHES) / TICKS_PER_REV;
-    private static final double WHEEL_BASE_WIDTH = 10.75; // in inches
-    private static final double HORIZONTAL_OFFSET = 6.5;  // in inches
-
-    // Robot state
-    private double xPosition = 0.0;
-    private double yPosition = 0.0;
-    private double heading = 0.0;
-    private double previousLeftEncoderPos = 0.0;
-    private double previousRightEncoderPos = 0.0;
-    private double previousHorizontalEncoderPos = 0.0;
-
-    public Drivetrain(HardwareMap hardwareMap, Telemetry telemetry, SharedData sharedData) {
-        this.telemetry = telemetry;
-        this.sharedData = sharedData;
-
+public class Drivetrain extends AllQuads2 {
+    private DcMotor leftFrontDrive = null;  //  Used to control the left front drive wheel
+    private DcMotor rightFrontDrive = null;  //  Used to control the right front drive wheel
+    private DcMotor leftBackDrive = null;  //  Used to control the left back drive wheel
+    private DcMotor rightBackDrive = null;  //  Used to control the right back drive wheel
+    public void InitDrivetrain() {
         leftFrontDrive = hardwareMap.get(DcMotor.class, "Left_front");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "Right_front");
         leftBackDrive = hardwareMap.get(DcMotor.class, "Left_rear");
@@ -47,131 +22,241 @@ public class Drivetrain {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
-        // Odometry encoders
-        leftEncoder = hardwareMap.get(DcMotorEx.class, "Left_rear");
-        rightEncoder = hardwareMap.get(DcMotorEx.class, "Right_rear");
-        horizontalEncoder = hardwareMap.get(DcMotorEx.class, "Left_front");
-
-        resetEncoders();
-
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-
-        imu = hardwareMap.get(IMU.class, "imu");
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-        imu.resetYaw();
+        leftFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
-    private void resetEncoders() {
-        leftEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        horizontalEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        horizontalEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+     public void SetMode(DcMotor.RunMode Mode) {
+        leftFrontDrive.setMode(Mode);
+        rightFrontDrive.setMode(Mode);
+        leftBackDrive.setMode(Mode);
+        rightBackDrive.setMode(Mode);
     }
-
-    public void updateOdometry() {
-        // Get current positions
-        double leftPosition = -1*leftEncoder.getCurrentPosition() * INCHES_PER_TICK;
-        double rightPosition = -1*rightEncoder.getCurrentPosition() * INCHES_PER_TICK;
-        double horizontalPosition = -1*horizontalEncoder.getCurrentPosition() * INCHES_PER_TICK;
-
-        // Calculate changes
-        double deltaLeft = leftPosition - previousLeftEncoderPos;
-        double deltaRight = rightPosition - previousRightEncoderPos;
-        double deltaHorizontal = horizontalPosition - previousHorizontalEncoderPos;
-
-        // Update previous positions
-        previousLeftEncoderPos = leftPosition;
-        previousRightEncoderPos = rightPosition;
-        previousHorizontalEncoderPos = horizontalPosition;
-
-        // Calculate heading change
-        double deltaHeading = (deltaRight - deltaLeft) / WHEEL_BASE_WIDTH;
-
-        // Calculate position changes
-        double deltaX = deltaHorizontal - HORIZONTAL_OFFSET * deltaHeading;
-        double deltaY = (deltaLeft + deltaRight) / 2.0;
-
-        // Update robot position
-        heading += deltaHeading;
-        xPosition += deltaX * Math.cos(heading) - deltaY * Math.sin(heading);
-        yPosition += deltaX * Math.sin(heading) + deltaY * Math.cos(heading);
-
-        telemetry.addData("Odometry X Position", xPosition);
-        telemetry.addData("Odometry Y Position", yPosition);
-        telemetry.addData("Odometry Heading", Math.toDegrees(heading));
-        telemetry.update();
-    }
-
-    public double getHeading() {
-        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        return orientation.getYaw(AngleUnit.DEGREES);
-    }
-
     public void SetPower(double power) {
         leftFrontDrive.setPower(power);
         rightFrontDrive.setPower(power);
         leftBackDrive.setPower(power);
         rightBackDrive.setPower(power);
     }
+    public void RecordPosition() {
+        telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+        telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+        telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+        telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+    }
+    public boolean IsAnyMotorBusy() {
+        return (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy());
+    }
+    public void turnToHeading(int targetHeading) {
+        double turnKp = 0.01; // This is a proportionality constant. You may need to tune this value.
+        while (Math.abs(getHeading() - targetHeading) > 1) { // Allow for a small error margin
 
-    // Method to drive forward with adjustable power
-    public void driveForward(double distanceInches, double power) {
-        resetEncoders();
-        double targetTicks = distanceInches / INCHES_PER_TICK;
+            double error = targetHeading - getHeading(); // Calculate the error
 
-        while (Math.abs(leftFrontDrive.getCurrentPosition()) < targetTicks) {
-            updateOdometry();
-            leftFrontDrive.setPower(power);
-            rightFrontDrive.setPower(power);
-            leftBackDrive.setPower(power);
-            rightBackDrive.setPower(power);
+            // Calculate wheel powers based on error
+            double turnPower = error * turnKp;
 
-            telemetry.addData("Driving Forward", "Position: %f / %f", Math.abs(leftFrontDrive.getCurrentPosition() * INCHES_PER_TICK), distanceInches);
+            double leftFrontPower    =  -turnPower;
+            double rightFrontPower   =  +turnPower;
+            double leftBackPower     =  -turnPower;
+            double rightBackPower    =  +turnPower;
+
+            // Ensure wheel powers do not exceed 1.0
+            double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+            max = Math.max(max, Math.abs(leftBackPower));
+            max = Math.max(max, Math.abs(rightBackPower));
+            if (max > 1.0) {
+                leftFrontPower /= max;
+                rightFrontPower /= max;
+                leftBackPower /= max;
+                rightBackPower /= max;
+            }
+
+            // Send powers to the wheels.
+            leftFrontDrive.setPower(leftFrontPower);
+            rightFrontDrive.setPower(rightFrontPower);
+            leftBackDrive.setPower(leftBackPower);
+            rightBackDrive.setPower(rightBackPower);
+
+            telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
             telemetry.update();
+
         }
-        SetPower(0); // Stop motors after reaching target
+        // Stop all the motors
+        SetPower(0);
+
+    }
+    public void moveAprilRobot(double x, double y, double yaw) {
+        // Calculate wheel powers.
+        double leftFrontPower    =  x -y -yaw;
+        double rightFrontPower   =  x +y +yaw;
+        double leftBackPower     =  x +y -yaw;
+        double rightBackPower    =  x -y +yaw;
+
+        // Normalize wheel powers to be less than 1.0
+        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+        max = Math.max(max, Math.abs(leftBackPower));
+        max = Math.max(max, Math.abs(rightBackPower));
+
+        if (max > 1.0) {
+            leftFrontPower /= max;
+            rightFrontPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
+        }
+
+        // Send powers to the wheels.
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
     }
 
-    // Method to strafe left with adjustable power
-    public void strafeLeft(double distanceInches, double power) {
-        resetEncoders();
-        double targetTicks = distanceInches / INCHES_PER_TICK;
-
-        while (Math.abs(leftFrontDrive.getCurrentPosition()) < targetTicks) {
-            updateOdometry();
-            leftFrontDrive.setPower(-power);
-            rightFrontDrive.setPower(power);
-            leftBackDrive.setPower(power);
-            rightBackDrive.setPower(-power);
-
-            telemetry.addData("Strafing Left", "Position: %f / %f", Math.abs(leftFrontDrive.getCurrentPosition() * INCHES_PER_TICK), distanceInches);
-            telemetry.update();
+    public void parkRobot(int quadrant, int Position, boolean touchPressed){
+        double[] distToStrafeAtPark ={0, -33, -26, -20}; // this sets the distance once we have placed the pixel on the backboard to strafe 0 is place holder
+        if (touchPressed){ //Go to the center
+            if (quadrant==1|| quadrant==2){
+                strafeRight(distToStrafeAtPark[Position]);
+                telemetry.addData("Touch Sensor", "Is Pressed");
+            } else {
+                strafeLeft(distToStrafeAtPark[(Position==1)?3:(Position==3)?1:Position]);
+                telemetry.addData("Touch Sensor", "Is Not Pressed");
+            }
+        } else {
+            if (quadrant==1|| quadrant==2){
+                strafeLeft(distToStrafeAtPark[(Position==1)?3:(Position==3)?1:Position]);                telemetry.addData("Touch Sensor", "Is Pressed");
+                telemetry.addData("Touch Sensor", "Is Pressed");
+            } else {
+                strafeRight(distToStrafeAtPark[Position]);
+                telemetry.addData("Touch Sensor", "Is Not Pressed");
+            }
         }
-        SetPower(0); // Stop motors after reaching target
+
     }
 
-    // Method to turn to a specified heading with adjustable power
-    public void turnToHeading(double targetHeadingDegrees, double power) {
-        double targetHeading = Math.toRadians(targetHeadingDegrees);
-        resetEncoders();
+    public void strafeRight(double distance) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); //537.7 encoder ticks, wheel is 96mm converting to inches divide by 25.4, per one circumference of the wheel
+        ticksToMove = (int) (distance * ticksPerInch);
+        // Positive distance means strafe right, negative means strafe left
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? 1 : -1)));
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? -1 : 1)));
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? -1 : 1)));
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? 1 : -1)));
+        double strafePwr = Range.clip((leftBackDrive.getTargetPosition()-leftFrontDrive.getCurrentPosition()) * SPEED_GAIN-0.2, -0.5 - MAX_AUTO_SPEED, 0.5+MAX_AUTO_SPEED);
 
-        while (Math.abs(targetHeading - heading) > Math.toRadians(1.0)) {
-            updateOdometry();
-            double turnPower = Range.clip(targetHeading - heading, -power, power);
+        // Set the mode to RUN_TO_POSITION
+        SetMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            leftFrontDrive.setPower(-turnPower);
-            rightFrontDrive.setPower(turnPower);
-            leftBackDrive.setPower(-turnPower);
-            rightBackDrive.setPower(turnPower);
+        // Apply power
+        SetPower(strafePwr);
 
-            telemetry.addData("Turning to Heading", "Heading: %f / %f", Math.toDegrees(heading), targetHeadingDegrees);
+        // Wait for the motors to finish
+        while (opModeIsActive() && IsAnyMotorBusy()) {
+            //increase the speed as the distance is greater or slow down when you get getting closer
+            strafePwr = Range.clip((leftBackDrive.getTargetPosition()-leftFrontDrive.getCurrentPosition()) * SPEED_GAIN-0.2, -0.5 - MAX_AUTO_SPEED, 0.5+MAX_AUTO_SPEED);
+            SetPower(strafePwr);
+            if (lookForRobot) {
+                while (sensorRight.getDistance(DistanceUnit.CM) < DETECTION_THRESHOLD2) {
+                    SetPower(0);
+                    // Optionally add a sleep here to avoid a busy loop
+                    sleep(100);
+                    lookForRobot = false;
+                }
+            }
+            // Optionally provide telemetry updates
+            RecordPosition();
             telemetry.update();
         }
-        SetPower(0); // Stop motors after reaching target heading
+
+        // Stop all the motors
+        SetPower(0);
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        SetMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    public void strafeLeft(double distance) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96/25.4) * Math.PI));
+        double strafePwr = Range.clip((leftBackDrive.getTargetPosition()-leftFrontDrive.getCurrentPosition()) * SPEED_GAIN-0.2, -0.5 - MAX_AUTO_SPEED, 0.5+MAX_AUTO_SPEED);
+
+        ticksToMove = (int) (distance * ticksPerInch);
+        // Positive distance means strafe left, negative means strafe right
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? -1 : 1)));
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? 1 : -1)));
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? 1 : -1)));
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + (int) (ticksToMove * (distance > 0 ? -1 : 1)));
+
+
+        // Set the mode to RUN_TO_POSITION
+        SetMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // Apply power
+        SetPower(strafePwr);
+
+        // Wait for the motors to finish
+        while (opModeIsActive() && IsAnyMotorBusy()) {
+            //increase the speed as the distance is greater or slow down when you get getting closer
+            strafePwr = Range.clip((leftBackDrive.getTargetPosition()-leftFrontDrive.getCurrentPosition()) * SPEED_GAIN-0.2, -0.5 - MAX_AUTO_SPEED, 0.5+MAX_AUTO_SPEED);
+            SetPower(strafePwr);
+            if (lookForRobot) {
+                while (sensorLeft.getDistance(DistanceUnit.CM) < DETECTION_THRESHOLD2) {
+                    SetPower(0);
+                    // Optionally add a sleep here to avoid a busy loop
+                    sleep(100);
+                    lookForRobot = false;
+                }
+            }
+
+            // Optionally provide telemetry updates
+            RecordPosition();
+            telemetry.update();
+        }
+
+        // Stop all the motors
+        SetPower(0);
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        SetMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    public void driveBackward(double distance) {driveForward(-distance);}
+
+    public void driveForward(double distance) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); //537.7 encoder ticks, wheel is 96mm converting to inches divide by 25.4, per one circumference of the wheel
+        ticksToMove = (int) (distance * ticksPerInch);
+        // Set the target positions for each motor
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + ticksToMove);
+        // Set the mode to RUN_TO_POSITION
+        SetMode(DcMotor.RunMode.RUN_TO_POSITION);
+        double power = Range.clip((leftBackDrive.getTargetPosition()-leftFrontDrive.getCurrentPosition()) * SPEED_GAIN+0.3 * (distance > 0 ? 1 : -1), -0.5 - MAX_AUTO_SPEED, 0.5+MAX_AUTO_SPEED);
+        // Apply power
+        SetPower(power);
+
+        while (opModeIsActive() && IsAnyMotorBusy()) {
+            power = Range.clip((leftBackDrive.getTargetPosition()-leftFrontDrive.getCurrentPosition()) * SPEED_GAIN+0.3 * (distance > 0 ? 1 : -1), -0.5 - MAX_AUTO_SPEED, 0.5+MAX_AUTO_SPEED);
+            SetPower(power);
+            // Optionally provide telemetry updates
+            RecordPosition();
+            telemetry.update();
+            if (lookForProp) {
+                if (sensorLeft.getDistance(DistanceUnit.CM) < DETECTION_THRESHOLD) {
+                    objectDetectedLeft = true;
+                    break;  // Exit the loop if we detect an object
+                }
+                if (sensorRight.getDistance(DistanceUnit.CM) < DETECTION_THRESHOLD) {
+                    objectDetectedRight = true;
+                    break;  // Exit the loop if we detect an object
+                }
+            }
+        }
+        // Stop all the motors
+        SetPower(0);
+        // Reset the motor modes back to RUN_USING_ENCODER
+        SetMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 }
