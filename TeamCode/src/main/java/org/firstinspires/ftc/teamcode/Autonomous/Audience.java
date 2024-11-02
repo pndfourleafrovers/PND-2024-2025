@@ -22,9 +22,9 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 
-@Autonomous(name="Red_Audience", group="Autonomous")
+@Autonomous(name="Audience", group="Autonomous")
 
-public class Red_Audience extends LinearOpMode {
+public class Audience extends LinearOpMode {
 
 
     final double DESIRED_DISTANCE = 13.5; //  this is how close the camera should get to the target (inches)
@@ -114,6 +114,8 @@ public class Red_Audience extends LinearOpMode {
         Arm = new Arm(hardwareMap);
 
         arm = hardwareMap.get(DcMotor.class, "arm");
+        sensorLeft = hardwareMap.get(com.qualcomm.robotcore.hardware.DistanceSensor.class, "LeftDis"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
+  //      sensorRight = hardwareMap.get(com.qualcomm.robotcore.hardware.DistanceSensor.class, "RightD");
         //distance to strafe a park is how far to move during autonomous to park the robot
         //to make it easier, the first number is just a placeholder
         arm.setDirection(DcMotor.Direction.FORWARD);
@@ -130,36 +132,46 @@ public class Red_Audience extends LinearOpMode {
             telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
             telemetry.addData("Arm Position", arm.getCurrentPosition() / TICKS_PER_DEGREE);
             telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+
             telemetry.update();
         }
 
         waitForStart();
         boolean RUN = true;
         while (opModeIsActive()) {
+            telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
+            telemetry.addData("Arm Position", arm.getCurrentPosition() / TICKS_PER_DEGREE);
+            telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+            telemetry.update();
             // when the Robot is at the backdrop and aligned to the correct April Tag
 
             while (RUN = true) {
 
                 //arm + viper up
-                Arm.armMovement(92);
+                Arm.armMovementSetPower(93,1);
+                sleep(900);
                 Viper.viperMovementSetSpeed(24, 1);
-                sleep(1700);
+                sleep(1400);
 
                 //move to release sample
-                driveBackward(7, 0.5);
+                driveBackward(5, 0.5);
 
                 //release sample
                 SMM.smmWMovement(1);
-                sleep(2000);
+                sleep(700);
                 SMM.smmWMovement(0);
 
                 //Move back to put stuff down
-                driveForward(11, 0.5);
+                driveForward(9, 0.7);
 
                 //retrack viper and move arm down
                 Viper.viperMovementSetSpeed(2, 1);
-                sleep(2000);
-                Arm.armMovementSetPower(0, 1);
+                sleep(1700);
+                Arm.armMovementSetPower(0, 0);
+                strafeRight(0.5, 0.7);
+                Viper.viperMovementSetSpeed(2, 1);
 
 
 
@@ -167,35 +179,40 @@ public class Red_Audience extends LinearOpMode {
 
                 // move to grab 2nd pixel
                 turnToHeading(0);
-                strafeLeft(46, 0.5);
+                strafeLeftWithObstacleDetection(34,0.5,7);
+                strafeLeft(9, 0.5);
                 turnToHeading(0);
 
                 //put viper out to grab pixel
-                Viper.viperMovementSetSpeed(6, 0.3);
-                Arm.armMovement(-4);
-
-                //grab pixel
                 SMM.smmWMovement(-1);
-                driveBackward(3, 0.3);
-                sleep(3000);
+                Arm.armMovementSetPower(-2, 1);
+
+                Viper.viperMovementSetSpeed(6, 0.3);
+                sleep(800);
+                //grab pixel
+
+                driveBackward(5, 0.1);
+
                 SMM.smmWMovement(0);
+                Arm.armMovementSetPower(7, 1);
 
                 // resets position
                 turnToHeading(0);
-                strafeRight(46, 1);
-                turnToHeading(0);
+                strafeRight(44.5, 0.7);
+               // turnToHeading(0);
 
                 // arm + viper up
-                Arm.armMovement(92);
+                Arm.armMovementSetPower(92,1);
+                sleep(900);
                 Viper.viperMovementSetSpeed(24, 1);
-                sleep(1700);
+                sleep(1400);
 
                 //move to release sample
-                driveBackward(11, 0.5);
+                driveBackward(5, 0.5);
 
                 //release sample
                 SMM.smmWMovement(1);
-                sleep(2000);
+                sleep(1000);
                 SMM.smmWMovement(0);
 
                 //Move back to put stuff down
@@ -203,7 +220,7 @@ public class Red_Audience extends LinearOpMode {
 
                 //retrack viper and move arm down
                 Viper.viperMovementSetSpeed(0, 1);
-                sleep(2000);
+                sleep(1900);
                 Arm.armMovementSetPower(0, 1);
 
 
@@ -211,7 +228,7 @@ public class Red_Audience extends LinearOpMode {
 
 
                 // move to grab 3rd pixel
-                turnToHeading(0);
+           //     turnToHeading(0);
                 strafeLeft(46, 0.5);
                 turnToHeading(0);
 
@@ -225,7 +242,7 @@ public class Red_Audience extends LinearOpMode {
                 //grab pixel
                 SMM.smmWMovement(-1);
                 driveBackward(20, 0.3);          // adjust distance is needed
-                sleep(3000);
+                sleep(1900);
                 SMM.smmWMovement(0);
 
                 // resets position
@@ -243,7 +260,7 @@ public class Red_Audience extends LinearOpMode {
 
                 //release sample
                 SMM.smmWMovement(1);
-                sleep(2000);
+                sleep(1900);
                 SMM.smmWMovement(0);
 
                 //Move back to put stuff down
@@ -256,51 +273,6 @@ public class Red_Audience extends LinearOpMode {
 
 
 
-
-
-                // move to grab 4th pixel
-                turnToHeading(0);
-                strafeLeft(46, 0.5);
-                turnToHeading(0);
-
-                //put viper out to grab pixel
-                Viper.viperMovementSetSpeed(6, 0.3);
-                Arm.armMovement(-4);
-
-                // move in position to grab sample
-                driveBackward(40, 0.7);
-
-                //grab pixel
-                SMM.smmWMovement(-1);
-                driveBackward(3, 0.3);          // adjust distance is needed
-                sleep(3000);
-                SMM.smmWMovement(0);
-
-                // resets position
-                turnToHeading(0);
-                strafeRight(46, 1);
-                turnToHeading(0);
-
-                // arm + viper up
-                Arm.armMovement(92);
-                Viper.viperMovementSetSpeed(24, 1);
-                sleep(1700);
-
-                //move to release sample
-                driveBackward(11, 0.5);
-
-                //release sample
-                SMM.smmWMovement(1);
-                sleep(2000);
-                SMM.smmWMovement(0);
-
-                //Move back to put stuff down
-                driveForward(11, 0.5);         // adjust for efficency for strafing
-
-                //retrack viper and move arm down
-                Viper.viperMovementSetSpeed(0, 1);
-                sleep(2000);
-                Arm.armMovementSetPower(0, 1);
 
 
 
@@ -309,6 +281,13 @@ public class Red_Audience extends LinearOpMode {
 
 
                 RUN = false;
+
+                /*
+                Potential alternative to the front:
+                basic first sample stuff, you know
+                Instead of doing the L-shape, strafe slightly, go forward, and turn
+                the sample should be grabbed from the vertical direction, do this for the third one to
+                 */
             }
         }
     }
@@ -325,8 +304,6 @@ public class Red_Audience extends LinearOpMode {
         rightFrontDrive = hardwareMap.get(DcMotor.class, "Right_front");
         leftBackDrive = hardwareMap.get(DcMotor.class, "Left_rear");
         rightBackDrive = hardwareMap.get(DcMotor.class, "Right_rear");
-        sensorLeft = hardwareMap.get(DistanceSensor.class, "LeftD"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
-        sensorRight = hardwareMap.get(DistanceSensor.class, "RightD"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -503,6 +480,8 @@ public class Red_Audience extends LinearOpMode {
             telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
             telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
             telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+
             telemetry.update();
         }
 
@@ -549,6 +528,8 @@ public class Red_Audience extends LinearOpMode {
             telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
             telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
             telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+
             telemetry.update();
         }
 
@@ -557,6 +538,113 @@ public class Red_Audience extends LinearOpMode {
         rightFrontDrive.setPower(0);
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    public void strafeLeftWithObstacleDetection(double distance, double power, double detectionThreshold) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); // Calculate ticks per inch
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for strafing left
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() - ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() - ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply power
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        // Continuously check for obstacle while the motors are running
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+            telemetry.update();
+
+            // Check the distance sensor and stop if within threshold
+            if (sensorLeft.getDistance(DistanceUnit.INCH) < detectionThreshold) {
+                // Stop all the motors immediately if an obstacle is detected
+                leftFrontDrive.setPower(0);
+                rightFrontDrive.setPower(0);
+                leftBackDrive.setPower(0);
+                rightBackDrive.setPower(0);
+                break; // Exit the loop if an obstacle is detected
+            }
+        }
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+
+
+
+
+
+
+
+    public void strafeRightWithObstacleDetection(double distance, double power, double detectionThreshold) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); // Calculate ticks per inch
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for strafing right
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() - ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() - ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply power
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        // Continuously check for obstacle while the motors are running
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.update();
+
+            // Check the distance sensor and stop if within threshold
+            if (sensorRight.getDistance(DistanceUnit.CM) < detectionThreshold) {
+                // Stop all the motors immediately if an obstacle is detected
+                leftFrontDrive.setPower(0);
+                rightFrontDrive.setPower(0);
+                leftBackDrive.setPower(0);
+                rightBackDrive.setPower(0);
+                break; // Exit the loop if an obstacle is detected
+            }
+        }
 
         // Reset the motor modes back to RUN_USING_ENCODER
         leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
