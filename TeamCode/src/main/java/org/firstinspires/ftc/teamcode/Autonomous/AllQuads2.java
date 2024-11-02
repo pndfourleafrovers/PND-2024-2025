@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Autonomous;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -19,7 +20,7 @@ import org.firstinspires.ftc.teamcode.Helper.Viper;
 
 import org.firstinspires.ftc.teamcode.Helper.Arm;
 @Autonomous(name="AllQuads2", group="Autonomous")
-//@Disabled
+@Disabled
 public class AllQuads2 extends LinearOpMode {
     //components
     Viper Viper = new Viper(hardwareMap);

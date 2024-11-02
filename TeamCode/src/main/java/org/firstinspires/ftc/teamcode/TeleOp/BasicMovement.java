@@ -195,7 +195,7 @@ public class BasicMovement extends LinearOpMode {
 
             //top basket
             if (gamepad2.a) {
-                Arm.armMovement(94);
+                Arm.armMovement(92);
                 Viper.viperMovementSetSpeed(24, 1);
             }
 
@@ -220,24 +220,24 @@ public class BasicMovement extends LinearOpMode {
 
             // inner pos 2
                 if (gamepad2.dpad_up) {
-                    Arm.armMovementSetPower(6,1);
+                    Arm.armMovementSetPower(4,1);
 
                     Viper.viperMovementSetSpeed(10, 0.3);
-                    Arm.armMovementSetPower(4,0.7);
+                    Arm.armMovementSetPower(2,0.7);
                  //   Viper.viperMovementSetSpeed(10, 0.5);
                 }
 
             // inner pos 3
             if (gamepad2.dpad_right) {
-                Arm.armMovementSetPower(6,1);
+                Arm.armMovementSetPower(4,1);
                 Viper.viperMovementSetSpeed(12, 0.3);
-                Arm.armMovementSetPower(9,0.7);
+                Arm.armMovementSetPower(7,0.7);
               //  Viper.viperMovementSetSpeed(12, 0.5);
             }
 
             if (gamepad2.dpad_down){
                 Viper.viperMovementSetSpeed(15, 0.5);
-                Arm.armMovementSetPower(11, 1);
+                Arm.armMovementSetPower(9, 1);
 
             }
             if (gamepad2.y) {

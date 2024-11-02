@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -94,6 +95,11 @@ public class Audience extends LinearOpMode {
         WAITING,
         READY_TO_MOVE
     }
+    private double          headingError  = 0;
+
+    // These variable are declared here (as class members) so they can be updated in various methods,
+    // but still be displayed by sendTelemetry()
+
 
     State state = State.READY_TO_MOVE;
     ElapsedTime timer = new ElapsedTime();
@@ -151,12 +157,12 @@ public class Audience extends LinearOpMode {
 
                 //arm + viper up
                 Arm.armMovementSetPower(93,1);
-                sleep(900);
+                sleep(800);
                 Viper.viperMovementSetSpeed(24, 1);
-                sleep(1400);
+                sleep(1300);
 
                 //move to release sample
-                driveBackward(5, 0.5);
+                driveBackward(6, 0.5);
 
                 //release sample
                 SMM.smmWMovement(1);
@@ -168,9 +174,9 @@ public class Audience extends LinearOpMode {
 
                 //retrack viper and move arm down
                 Viper.viperMovementSetSpeed(2, 1);
-                sleep(1700);
+                sleep(1300);
                 Arm.armMovementSetPower(0, 0);
-                strafeRight(0.5, 0.7);
+              //  strafeRight(0.5, 0.7);
                 Viper.viperMovementSetSpeed(2, 1);
 
 
@@ -178,27 +184,27 @@ public class Audience extends LinearOpMode {
 
 
                 // move to grab 2nd pixel
-                turnToHeading(0);
-                strafeLeftWithObstacleDetection(34,0.5,7);
-                strafeLeft(9, 0.5);
-                turnToHeading(0);
+               // turnToHeading(0);
+                strafeLeftWithObstacleDetection(34,0.5,7,0);
+                strafeLeftWhileHoldingHeading(11, 0.5,0);
+            //    turnToHeading(0);
 
                 //put viper out to grab pixel
                 SMM.smmWMovement(-1);
-                Arm.armMovementSetPower(-2, 1);
+                Arm.armMovementSetPower(-5, 1);
 
-                Viper.viperMovementSetSpeed(6, 0.3);
-                sleep(800);
+                Viper.viperMovementSetSpeed(6, 0.4);
+                sleep(400);
                 //grab pixel
 
-                driveBackward(5, 0.1);
+                driveBackward(3, 0.1);
 
                 SMM.smmWMovement(0);
                 Arm.armMovementSetPower(7, 1);
 
                 // resets position
                 turnToHeading(0);
-                strafeRight(44.5, 0.7);
+                strafeRight(44, 0.7);
                // turnToHeading(0);
 
                 // arm + viper up
@@ -208,7 +214,7 @@ public class Audience extends LinearOpMode {
                 sleep(1400);
 
                 //move to release sample
-                driveBackward(5, 0.5);
+                driveBackward(6, 0.5);
 
                 //release sample
                 SMM.smmWMovement(1);
@@ -216,60 +222,24 @@ public class Audience extends LinearOpMode {
                 SMM.smmWMovement(0);
 
                 //Move back to put stuff down
-                driveForward(11, 0.5);
+                driveForward(5, 0.5);
 
                 //retrack viper and move arm down
                 Viper.viperMovementSetSpeed(0, 1);
-                sleep(1900);
-                Arm.armMovementSetPower(0, 1);
+                sleep(1600);
+              //  Arm.armMovementSetPower(0, 1);
 
 
 
 
 
-                // move to grab 3rd pixel
-           //     turnToHeading(0);
-                strafeLeft(46, 0.5);
+                // move to park
+             //   turnToHeading(0);
+                strafeLeftWhileHoldingHeading(64, 1, 0);
+                Arm.armMovementSetPower(136,1);
+                driveForward(19,1);
                 turnToHeading(0);
-
-                //put viper out to grab pixel
-                Viper.viperMovementSetSpeed(6, 0.3);
-                Arm.armMovement(-4);
-
-                // move in position to grab sample
-                driveBackward(20, 0.7);
-
-                //grab pixel
-                SMM.smmWMovement(-1);
-                driveBackward(20, 0.3);          // adjust distance is needed
-                sleep(1900);
-                SMM.smmWMovement(0);
-
-                // resets position
-                turnToHeading(0);
-                strafeRight(46, 1);
-                turnToHeading(0);
-
-                // arm + viper up
-                Arm.armMovement(92);
-                Viper.viperMovementSetSpeed(24, 1);
-                sleep(1700);
-
-                //move to release sample
-                driveBackward(11, 0.5);
-
-                //release sample
-                SMM.smmWMovement(1);
-                sleep(1900);
-                SMM.smmWMovement(0);
-
-                //Move back to put stuff down
-                driveForward(11, 0.5);         // adjust for efficency for strafing
-
-                //retrack viper and move arm down
-                Viper.viperMovementSetSpeed(0, 1);
-                sleep(2000);
-                Arm.armMovementSetPower(0, 1);
+                sleep(10000);
 
 
 
@@ -396,7 +366,60 @@ public class Audience extends LinearOpMode {
         leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+    public void driveBackwardWithDetection(double distance, double power, double detect) {
+        driveForwardWithDetection(-distance, power, detect);
+    }
+    public void driveForwardWithDetection(double distance, double power, double detect) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96/25.4) * Math.PI)); //537.7 encoder ticks, wheel is 96mm converting to inches divide by 25.4, per one circumference of the wheel
+        ticksToMove = (int) (distance * ticksPerInch);
+        // Set the target positions for each motor
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + ticksToMove);
 
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply power
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.update();
+            if (lookForProp){
+                if (sensorLeft.getDistance(DistanceUnit.CM) < DETECTION_THRESHOLD) {
+                    objectDetectedLeft = true;
+                    break;  // Exit the loop if we detect an object
+                }
+                if (sensorRight.getDistance(DistanceUnit.CM) < DETECTION_THRESHOLD) {
+                    objectDetectedRight = true;
+                    break;  // Exit the loop if we detect an object
+                }
+            }
+        }
+        // Stop all the motors
+        leftFrontDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
     public double getHeading() {
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         return orientation.getYaw(AngleUnit.DEGREES);
@@ -545,7 +568,7 @@ public class Audience extends LinearOpMode {
         leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    public void strafeLeftWithObstacleDetection(double distance, double power, double detectionThreshold) {
+    public void strafeLeftWithObstacleDetection(double distance, double power, double detectionThreshold, double desiredHeading) {
         int ticksToMove;
         double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); // Calculate ticks per inch
         ticksToMove = (int) (distance * ticksPerInch);
@@ -567,18 +590,16 @@ public class Audience extends LinearOpMode {
         rightFrontDrive.setPower(power);
         leftBackDrive.setPower(power);
         rightBackDrive.setPower(power);
-
-        // Continuously check for obstacle while the motors are running
         while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
-            // Optionally provide telemetry updates
-            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
-            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
-            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
-            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
-            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
-            telemetry.update();
+            double currentHeading = getHeading();  // Fetch current heading from the IMU
+            double headingError = desiredHeading - currentHeading;  // Calculate error in heading
+            double correction = TURN_GAIN * headingError;  // Calculate correction factor
 
-            // Check the distance sensor and stop if within threshold
+            // Adjust motor powers based on correction needed
+            leftFrontDrive.setPower(power - correction);
+            rightFrontDrive.setPower(power + correction);
+            leftBackDrive.setPower(power + correction);
+            rightBackDrive.setPower(power - correction);
             if (sensorLeft.getDistance(DistanceUnit.INCH) < detectionThreshold) {
                 // Stop all the motors immediately if an obstacle is detected
                 leftFrontDrive.setPower(0);
@@ -587,7 +608,19 @@ public class Audience extends LinearOpMode {
                 rightBackDrive.setPower(0);
                 break; // Exit the loop if an obstacle is detected
             }
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+            telemetry.addData("Current Heading", currentHeading);
+            telemetry.addData("Heading Error", headingError);
+            telemetry.addData("Correction", correction);
+            telemetry.update();
         }
+        // Continuously check for obstacle while the motors are running
+
 
         // Reset the motor modes back to RUN_USING_ENCODER
         leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -817,4 +850,59 @@ public class Audience extends LinearOpMode {
                 break;
         }
     }
+    public void strafeLeftWhileHoldingHeading(double distance, double power, double desiredHeading) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI));  // Calculate ticks per inch
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for strafing left
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() - ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() - ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply initial power to start movement
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        // Continuously adjust power to maintain heading
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            double currentHeading = getHeading();  // Fetch current heading from the IMU
+            double headingError = desiredHeading - currentHeading;  // Calculate error in heading
+            double correction = TURN_GAIN * headingError;  // Calculate correction factor
+
+            // Adjust motor powers based on correction needed
+            leftFrontDrive.setPower(power - correction);
+            rightFrontDrive.setPower(power + correction);
+            leftBackDrive.setPower(power + correction);
+            rightBackDrive.setPower(power - correction);
+
+            // Optionally provide telemetry updates
+            telemetry.addData("Current Heading", currentHeading);
+            telemetry.addData("Heading Error", headingError);
+            telemetry.addData("Correction", correction);
+            telemetry.update();
+        }
+
+        // Stop all motors after movement
+        leftFrontDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
 }

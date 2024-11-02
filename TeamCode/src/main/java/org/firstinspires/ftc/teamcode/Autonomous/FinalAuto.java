@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Helper.Arm;
@@ -9,6 +10,8 @@ import org.firstinspires.ftc.teamcode.Helper.SMM;
 import org.firstinspires.ftc.teamcode.Helper.Viper;
 
 @Autonomous(name="Final Auto", group="Autonomous")
+@Disabled
+
 public class FinalAuto extends LinearOpMode {
 
     public EncoderMovement encoderMovement;

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -11,6 +12,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Helper.EncoderMovement;
 
 @Autonomous(name="Encoder Autonomous", group="Autonomous")
+@Disabled
+
 public class EncoderAutoTest extends LinearOpMode {
 
     public EncoderMovement encoderMovement;

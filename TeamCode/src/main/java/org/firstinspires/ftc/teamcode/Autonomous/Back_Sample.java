@@ -128,6 +128,9 @@ public class Back_Sample extends LinearOpMode {
             telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
             telemetry.addData("Arm Position", arm.getCurrentPosition() / TICKS_PER_DEGREE);
             telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+            telemetry.addData("Distance: ", sensorRight.getDistance(DistanceUnit.INCH));
+
             telemetry.update();
         }
 
@@ -137,13 +140,39 @@ public class Back_Sample extends LinearOpMode {
             telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
             telemetry.addData("Arm Position", arm.getCurrentPosition() / TICKS_PER_DEGREE);
             telemetry.addData("Viper Position", Viper.viper.getCurrentPosition() / ticksPerViperInch);
+
+
             telemetry.update();
             // when the Robot is at the backdrop and aligned to the correct April Tag
 
             while (RUN = true) {
 
+                driveBackwardWithDetection(71,0.2,15);
+                //arm + viper up
+                Arm.armMovementSetPower(93,1);
+                sleep(800);
+                Viper.viperMovementSetSpeed(24, 1);
+                sleep(1300);
 
+                //move to release sample
+                driveBackward(6, 0.5);
 
+                //release sample
+                SMM.smmWMovement(1);
+                sleep(700);
+                SMM.smmWMovement(0);
+
+                driveForward(40, 0.7);
+
+                //retrack viper and move arm down
+                Viper.viperMovementSetSpeed(2, 1);
+                sleep(1300);
+                Arm.armMovementSetPower(0, 0);
+                //  strafeRight(0.5, 0.7);
+                Viper.viperMovementSetSpeed(2, 1);
+                driveForward(43, 0.7);
+
+                sleep(20000);
 
 
 
@@ -172,8 +201,8 @@ public class Back_Sample extends LinearOpMode {
         rightFrontDrive = hardwareMap.get(DcMotor.class, "Right_front");
         leftBackDrive = hardwareMap.get(DcMotor.class, "Left_rear");
         rightBackDrive = hardwareMap.get(DcMotor.class, "Right_rear");
-        sensorLeft = hardwareMap.get(DistanceSensor.class, "LeftD"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
-        sensorRight = hardwareMap.get(DistanceSensor.class, "RightD"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
+        sensorLeft = hardwareMap.get(DistanceSensor.class, "LeftDis"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
+        sensorRight = hardwareMap.get(DistanceSensor.class, "RightDis"); // Replace 'sensorLeftName' with the name you've given the sensor in the configuration.
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
@@ -546,7 +575,250 @@ public class Back_Sample extends LinearOpMode {
         leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
 */
+    public void driveBackwardWithDetection(double distance, double power, double detect) {
+        driveForwardWithDetection(-distance, power, detect);
+    }
+    public void driveForwardWithDetection(double distance, double power, double detect) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI));
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for driving forward
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply power
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        // Wait for the motors to finish or stop if an obstacle is detected
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            // Check for obstacles using both sensors
+            if (sensorLeft.getDistance(DistanceUnit.INCH) < detect || sensorRight.getDistance(DistanceUnit.INCH) < detect) {
+                // Obstacle detected, stop all motors
+                leftFrontDrive.setPower(0);
+                rightFrontDrive.setPower(0);
+                leftBackDrive.setPower(0);
+                rightBackDrive.setPower(0);
+
+                // Wait until the obstacle is no longer detected
+                while (sensorLeft.getDistance(DistanceUnit.INCH) < detect || sensorRight.getDistance(DistanceUnit.INCH) < detect) {
+                    telemetry.addData("Status", "Waiting for obstacle to clear");
+                    telemetry.update();
+                }
+
+                // Resume movement
+                leftFrontDrive.setPower(0.7);
+                rightFrontDrive.setPower(0.7);
+                leftBackDrive.setPower(0.7);
+                rightBackDrive.setPower(0.7);
+            }
+
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.update();
+        }
+
+        // Stop all the motors
+        leftFrontDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    public void strafeLeftWithObstacleDetection(double distance, double power, double detectionThreshold, double desiredHeading) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); // Calculate ticks per inch
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for strafing left
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() - ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() - ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply power
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            double currentHeading = getHeading();  // Fetch current heading from the IMU
+            double headingError = desiredHeading - currentHeading;  // Calculate error in heading
+            double correction = TURN_GAIN * headingError;  // Calculate correction factor
+
+            // Adjust motor powers based on correction needed
+            leftFrontDrive.setPower(power - correction);
+            rightFrontDrive.setPower(power + correction);
+            leftBackDrive.setPower(power + correction);
+            rightBackDrive.setPower(power - correction);
+            if (sensorLeft.getDistance(DistanceUnit.INCH) < detectionThreshold) {
+                // Stop all the motors immediately if an obstacle is detected
+                leftFrontDrive.setPower(0);
+                rightFrontDrive.setPower(0);
+                leftBackDrive.setPower(0);
+                rightBackDrive.setPower(0);
+                break; // Exit the loop if an obstacle is detected
+            }
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.addData("Distance: ", sensorLeft.getDistance(DistanceUnit.INCH));
+            telemetry.addData("Current Heading", currentHeading);
+            telemetry.addData("Heading Error", headingError);
+            telemetry.addData("Correction", correction);
+            telemetry.update();
+        }
+        // Continuously check for obstacle while the motors are running
+
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+
+
+
+
+
+
+
+    public void strafeRightWithObstacleDetection(double distance, double power, double detectionThreshold) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI)); // Calculate ticks per inch
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for strafing right
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() + ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() - ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() - ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() + ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply power
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        // Continuously check for obstacle while the motors are running
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            // Optionally provide telemetry updates
+            telemetry.addData("LeftFrontDrive Position", leftFrontDrive.getCurrentPosition());
+            telemetry.addData("RightFrontDrive Position", rightFrontDrive.getCurrentPosition());
+            telemetry.addData("LeftBackDrive Position", leftBackDrive.getCurrentPosition());
+            telemetry.addData("RightBackDrive Position", rightBackDrive.getCurrentPosition());
+            telemetry.update();
+
+            // Check the distance sensor and stop if within threshold
+            if (sensorRight.getDistance(DistanceUnit.CM) < detectionThreshold) {
+                // Stop all the motors immediately if an obstacle is detected
+                leftFrontDrive.setPower(0);
+                rightFrontDrive.setPower(0);
+                leftBackDrive.setPower(0);
+                rightBackDrive.setPower(0);
+                break; // Exit the loop if an obstacle is detected
+            }
+        }
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    public void strafeLeftWhileHoldingHeading(double distance, double power, double desiredHeading) {
+        int ticksToMove;
+        double ticksPerInch = (537.7 / ((96 / 25.4) * Math.PI));  // Calculate ticks per inch
+        ticksToMove = (int) (distance * ticksPerInch);
+
+        // Set target positions for strafing left
+        leftFrontDrive.setTargetPosition(leftFrontDrive.getCurrentPosition() - ticksToMove);
+        rightFrontDrive.setTargetPosition(rightFrontDrive.getCurrentPosition() + ticksToMove);
+        leftBackDrive.setTargetPosition(leftBackDrive.getCurrentPosition() + ticksToMove);
+        rightBackDrive.setTargetPosition(rightBackDrive.getCurrentPosition() - ticksToMove);
+
+        // Set the mode to RUN_TO_POSITION
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Apply initial power to start movement
+        leftFrontDrive.setPower(power);
+        rightFrontDrive.setPower(power);
+        leftBackDrive.setPower(power);
+        rightBackDrive.setPower(power);
+
+        // Continuously adjust power to maintain heading
+        while (opModeIsActive() && (leftFrontDrive.isBusy() || rightFrontDrive.isBusy() || leftBackDrive.isBusy() || rightBackDrive.isBusy())) {
+            double currentHeading = getHeading();  // Fetch current heading from the IMU
+            double headingError = desiredHeading - currentHeading;  // Calculate error in heading
+            double correction = TURN_GAIN * headingError;  // Calculate correction factor
+
+            // Adjust motor powers based on correction needed
+            leftFrontDrive.setPower(power - correction);
+            rightFrontDrive.setPower(power + correction);
+            leftBackDrive.setPower(power + correction);
+            rightBackDrive.setPower(power - correction);
+
+            // Optionally provide telemetry updates
+            telemetry.addData("Current Heading", currentHeading);
+            telemetry.addData("Heading Error", headingError);
+            telemetry.addData("Correction", correction);
+            telemetry.update();
+        }
+
+        // Stop all motors after movement
+        leftFrontDrive.setPower(0);
+        rightFrontDrive.setPower(0);
+        leftBackDrive.setPower(0);
+        rightBackDrive.setPower(0);
+
+        // Reset the motor modes back to RUN_USING_ENCODER
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
     private void controlArm(int desiredPosition) {
         switch (state) {
             case READY_TO_MOVE:

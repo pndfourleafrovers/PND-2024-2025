@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.Helper.SMM;
 import org.firstinspires.ftc.teamcode.Helper.Viper;
 
 //make the methods into objects so you can call them
-@Disabled
+//@Disabled
 @Autonomous(name="Holding Straight", group="Autonomous")
 public class Holding_Straight_Test extends LinearOpMode{
 
