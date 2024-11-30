@@ -64,6 +64,7 @@ public class BasicMovement extends LinearOpMode {
     private SMM SMM;
     private Arm Arm;
     double ticksPerViperInch = (537.7 / (112/25.4));
+    int i = 0;
 
     @Override
     public void runOpMode() {
@@ -145,7 +146,7 @@ public class BasicMovement extends LinearOpMode {
             FrontRight.setPower(rightFrontPower * powerMultiplier);
             RearLeft.setPower(leftBackPower * powerMultiplier);
             RearRight.setPower(rightBackPower * powerMultiplier);
-
+/*
             if (gamepad2.right_stick_button) {
                 arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 double armMove = -gamepad2.left_stick_y;
@@ -198,15 +199,15 @@ public class BasicMovement extends LinearOpMode {
                 Arm.armMovementSetPower(93, 1);
                 Viper.viperMovementSetSpeed(24, 1);
             }
-
+            // bring arm and viper back
             if (gamepad2.x) {
                 Viper.viperMovementSetSpeed(1, 1);
                 sleep(1600);
-                Arm.armMovementSetPower(8, 1);
+                Arm.armMovementSetPower(20, 1);
 
             }
 
-            //rest to 0
+            //rest viper to 0
             if (gamepad2.b) {
                 Viper.viperMovementSetSpeed(0, 1);
 
@@ -214,7 +215,7 @@ public class BasicMovement extends LinearOpMode {
 
             // inner pos 1
             if (gamepad2.dpad_left) {
-                Arm.armMovementSetPower(11, 1);
+                Arm.armMovementSetPower(8, 1);
 
                 Viper.viperMovementSetSpeed(6, 0.3);
                 //  Arm.armMovement(5);
@@ -223,7 +224,7 @@ public class BasicMovement extends LinearOpMode {
             // inner pos 2
             if (gamepad2.dpad_up) {
 
-                Arm.armMovementSetPower(13, 1);
+                Arm.armMovementSetPower(12, 1);
 
                 Viper.viperMovementSetSpeed(10, 0.3);
                 //  Arm.armMovementSetPower(7,0.7);
@@ -232,40 +233,67 @@ public class BasicMovement extends LinearOpMode {
 
             // inner pos 3
             if (gamepad2.dpad_right) {
-                Arm.armMovementSetPower(15, 1);
+                Arm.armMovementSetPower(14, 1);
                 Viper.viperMovementSetSpeed(12, 0.3);
                 //   Arm.armMovementSetPower(9,0.7);
                 //  Viper.viperMovementSetSpeed(12, 0.5);
             }
-
+            // inner pos 4
             if (gamepad2.dpad_down) {
-                Arm.armMovementSetPower(17, 1);
+                Arm.armMovementSetPower(16, 1);
                 Viper.viperMovementSetSpeed(15, 0.5);
                 //  Arm.armMovementSetPower(11, 1);
 
             }
+            // ground holding position
             if (gamepad2.y) {
                 Arm.armMovementSetPower(20, 1);
                 Viper.viperMovementSetSpeed(1, 0.5);
 
             }
+            // position to place specimen
             if (gamepad1.x) {
-                Arm.armMovementSetPower(89, 1);
-                Viper.viperMovementSetSpeed(3, 1);
+                Arm.armMovementSetPower(75, 1);
+                Viper.viperMovementSetSpeed(6, 1);
+/*
+                    if(i == 0){
+                        Arm.armMovementSetPower(89, 1);
+                        Viper.viperMovementSetSpeed(2, 1);
+                        i=1;
+                    }
+                    if(i == 1){
+                        Arm.armMovementSetPower(89, 1);
+                        Viper.viperMovementSetSpeed(0, 1);
+                        i = 0;
+                    }
+*/
+
+            }
+            // pull back to set specimen
+            if(gamepad1.b){
+                Viper.viperMovementSetSpeed(0,1);
+                Arm.armMovementSetPower(65,1);
             }
             //close
             if (gamepad1.dpad_down) {
-                SMM.smmGMovement(0.61);
+                SMM.smmGMovement(0.57);
 
             }
             //open
             else if (gamepad1.dpad_up) {
-                SMM.smmGMovement(0.61);
+                SMM.smmGMovement(0.80);
+                // half open
             } else if (gamepad1.dpad_right) {
-                SMM.smmGMovement(0.87);
-            } else if (gamepad1.dpad_left) {
+                SMM.smmGMovement(0.70);
+            }
+            // put arm at rest
+            if (gamepad1.y && Viper.viper.getCurrentPosition() / ticksPerViperInch < 20) {
                 Arm.armMovementSetPower(0, 0);
             }
+            else if(gamepad1.y && Viper.viper.getCurrentPosition() / ticksPerViperInch >= 20){
+                break;
+            }
+
             /*
             if(gamepad1.a){
                 for()
@@ -282,7 +310,7 @@ public class BasicMovement extends LinearOpMode {
                 } else {
                     SMM.smmWMovement(0);
                 }
-*/
+*//*
             //pos 1 smm
             if (gamepad2.right_bumper) {
                 SMM.smmTMovement(1);
@@ -291,7 +319,7 @@ public class BasicMovement extends LinearOpMode {
             else {
                 SMM.smmTMovement(0);
             }
-
+*/
 
             // level 2 preparing position
             if (gamepad1.a) {
@@ -304,7 +332,15 @@ public class BasicMovement extends LinearOpMode {
             if (gamepad1.left_bumper) {
                 Viper.viperMovementSetSpeed(1, 1);
 
-                Arm.armMovementSetPower(13, 1);
+                Arm.armMovementSetPower(20, 1);
+            }
+            // reset arm position if knocked out of
+            if(gamepad1.back){
+                arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            }
+            // grab specimen off of rim of field. Currently not being actively used.
+            if(gamepad2.back){
+                Arm.armMovementSetPower(41,1);
             }
         }
     }
