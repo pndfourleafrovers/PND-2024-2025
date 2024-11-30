@@ -21,7 +21,7 @@ public class Drivetrain {
 
     // Odometry constants
     private static final double WHEEL_DIAMETER_INCHES = 38.0 / 25.4; // 38mm to inches
-    private static final double TICKS_PER_REV = 1000.0;
+    private static final double TICKS_PER_REV = 2000.0;
     private static final double INCHES_PER_TICK = (Math.PI * WHEEL_DIAMETER_INCHES) / TICKS_PER_REV;
     private static final double WHEEL_BASE_WIDTH = 10.75; // in inches
     private static final double HORIZONTAL_OFFSET = 6.5;  // in inches
